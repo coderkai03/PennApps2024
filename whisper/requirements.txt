@@ -1,0 +1,4 @@
+ffmpeg-python
+keybert
+whisper @ git+https://github.com/openai/whisper.git
+torch

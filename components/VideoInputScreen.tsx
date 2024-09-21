@@ -8,16 +8,13 @@ import { Label } from "@/components/ui/label"
 import { useTheme } from "next-themes"
 import { Progress } from "@/components/ui/progress"
 
-interface Chapter {
-  title: string;
-  startTime: number;
-  endTime: number;
-}
-
 export default function VideoInputScreen({ onNext }: { onNext: (file: File, chapters: Chapter[]) => void }) {
   const [file, setFile] = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [processingProgress, setProcessingProgress] = useState(0)
+  const [isUploading, setIsUploading] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
@@ -28,61 +25,85 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0])
+      setError(null)
     }
   }
 
   const handleUpload = async () => {
     if (file) {
-      setUploading(true)
+      setIsUploading(true)
       setUploadProgress(0)
       const formData = new FormData()
       formData.append('video', file)
 
       try {
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        })
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', '/api/upload', true)
 
-        const reader = response.body!.getReader()
-        const decoder = new TextDecoder()
-
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          const chunk = decoder.decode(value)
-          const updates = chunk.split('\n').filter(Boolean).map(JSON.parse)
-
-          for (const update of updates) {
-            if (update.progress) {
-              setUploadProgress(update.progress)
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            let progress = (event.loaded / event.total) * 100
+            if (progress >= 95) {
+              progress = 95 // Cap the progress at 99% during upload
             }
-            if (update.videoUrl) {
-              // Video upload is complete, now process the video
-              const processResponse = await fetch('/api/process-video', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ videoUrl: update.videoUrl }),
-              })
-
-              if (!processResponse.ok) {
-                throw new Error('Failed to process video')
-              }
-
-              const result = await processResponse.json()
-              onNext(file, result.chapters)
-            }
+            setUploadProgress(progress)
           }
         }
+
+        xhr.onload = async () => {
+          if (xhr.status === 200) {
+            const { videoUrl } = JSON.parse(xhr.responseText)
+            setIsUploading(false)
+            setIsProcessing(true)
+            await processVideo(videoUrl)
+          } else {
+            throw new Error('Upload failed')
+          }
+        }
+
+        xhr.onerror = () => {
+          throw new Error('Upload failed')
+        }
+
+        xhr.send(formData)
       } catch (error) {
-        console.error('Error uploading and processing video:', error)
-        // Handle error (e.g., show error message to user)
-      } finally {
-        setUploading(false)
+        console.error('Error uploading video:', error)
+        setError('Failed to upload video. Please try again.')
+        setIsUploading(false)
       }
+    }
+  }
+
+  const processVideo = async (videoUrl: string) => {
+    setProcessingProgress(0)
+    try {
+      const processResponse = await fetch('/api/process-video', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ videoUrl }),
+      })
+
+      if (!processResponse.ok) {
+        throw new Error('Failed to process video')
+      }
+
+      // thiis is only a simulation for processing 
+      for (let i = 0; i <= 100; i += 20) { 
+        setProcessingProgress(i)
+        await new Promise(resolve => setTimeout(resolve, 200)) 
+      }
+
+
+      const result = await processResponse.json()
+      onNext(file!, result.chapters)
+    } catch (error) {
+      console.error('Error processing video:', error)
+      setError('Failed to process video. Please try again.')
+    } finally {
+      setIsProcessing(false)
+      setProcessingProgress(0)
     }
   }
 
@@ -109,6 +130,7 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
             accept="video/*"
             onChange={handleFileChange}
             className="cursor-pointer bg-background dark:bg-gray-700 text-foreground dark:text-white"
+            disabled={isUploading || isProcessing}
           />
         </div>
         {file && (
@@ -116,13 +138,30 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
             Selected file: {file.name}
           </p>
         )}
+        {isUploading && (
+          <div className="space-y-2">
+            <Label className="text-foreground dark:text-white">Uploading...</Label>
+            <Progress value={uploadProgress} className="w-full" />
+          </div>
+        )}
+        {isProcessing && (
+          <div className="space-y-2">
+            <Label className="text-foreground dark:text-white">Processing...</Label>
+            <Progress value={processingProgress} className="w-full" />
+          </div>
+        )}
+        {error && (
+          <p className="text-sm text-red-500">{error}</p>
+        )}
         <Button
           onClick={handleUpload}
-          disabled={!file || uploading}
+          disabled={!file || isUploading || isProcessing}
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
         >
-          {uploading ? (
+          {isUploading ? (
             <>Uploading...</>
+          ) : isProcessing ? (
+            <>Processing...</>
           ) : (
             <>
               <Upload className="w-4 h-4 mr-2" />

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import VideoInputScreen from "./VideoInputScreen";
 import VideoPlayerScreen from "./VideoPlayerScreen";
+import HowItWorks from './HowItWorks';
 import * as THREE from 'three';
 import Lenis from '@studio-freight/lenis';
 import Loading from './Loading'
@@ -72,79 +73,79 @@ export default function SaasVideoLandingPage() {
 
     // Initialize Lenis for smooth scrolling
     const lenis = new Lenis()
-  
+
     function raf(time: number) {
       lenis.raf(time)
       requestAnimationFrame(raf)
     }
-  
+
     requestAnimationFrame(raf)
-  
+
     // Initialize Three.js scene
     let scene: THREE.Scene | null = null;
     let camera: THREE.PerspectiveCamera | null = null;
     let renderer: THREE.WebGLRenderer | null = null;
     let particlesMesh: THREE.Points | null = null;
-  
+
     const initThreeJs = () => {
       if (!canvasRef.current) return;
-  
+
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
       renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, alpha: true });
-  
+
       renderer.setSize(window.innerWidth, window.innerHeight);
-      
+
       // Create a particle system
       const particlesGeometry = new THREE.BufferGeometry();
       const particlesCount = 5000;
       const posArray = new Float32Array(particlesCount * 3);
-      
-      for(let i = 0; i < particlesCount * 3; i++) {
+
+      for (let i = 0; i < particlesCount * 3; i++) {
         posArray[i] = (Math.random() - 0.5) * 5;
       }
-      
+
       particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-      
+
       const particlesMaterial = new THREE.PointsMaterial({
         size: 0.005,
         color: theme === 'dark' ? 0xffffff : 0x4a90e2
       });
-      
+
       particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
       scene.add(particlesMesh);
-  
+
       camera.position.z = 2;
-  
+
       animate();
     }
-  
+
     const animate = () => {
       if (!scene || !camera || !renderer || !particlesMesh) return;
-  
+
       requestAnimationFrame(animate);
       particlesMesh.rotation.y += 0.001;
       renderer.render(scene, camera);
     };
-  
+
     // Initialize Three.js after a short delay to ensure the canvas is in the DOM
     const initTimeout = setTimeout(initThreeJs, 100);
-  
+
     // Handle window resize
     const handleResize = () => {
       if (!camera || !renderer) return;
-  
+
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     };
-  
+
     window.addEventListener('resize', handleResize);
-  
+
     return () => {
       clearTimeout(initTimeout);
       window.removeEventListener('resize', handleResize);
-      
+
       // Clean up Three.js resources
       if (renderer) {
         renderer.dispose();
@@ -155,11 +156,15 @@ export default function SaasVideoLandingPage() {
       }
     };
   }, [theme, mounted]);
-  
+
   const handleVideoUpload = (file: File, processedChapters: Chapter[]) => {
     setVideoFile(file)
     setChapters(processedChapters)
   }
+
+  const resetUpload = () => {
+    setVideoFile(null);
+  };
 
   const scrollToVideoInput = () => {
     setShowVideoInput(true);
@@ -177,7 +182,7 @@ export default function SaasVideoLandingPage() {
       {!isLoading && (
         <div className="min-h-screen bg-gradient-to-b from-blue-100 to-white dark:from-gray-900 dark:to-black text-black dark:text-white relative">
           <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full pointer-events-none" />
-          
+
           {/* Dark Mode Toggle */}
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -219,18 +224,7 @@ export default function SaasVideoLandingPage() {
           </section>
 
           {/* How It Works Section */}
-          <section className="py-16 px-4 bg-gray-100 dark:bg-gray-800 relative z-10">
-            <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
-            <div className="max-w-4xl mx-auto">
-              <ol className="list-decimal list-inside space-y-6">
-                <li className="text-xl">Upload your video to our secure platform</li>
-                <li className="text-xl">Our AI analyzes the content and generates intelligent chapters</li>
-                <li className="text-xl">Review and fine-tune the generated chapters if needed</li>
-                <li className="text-xl">Embed the enhanced video player on your website or share directly</li>
-                <li className="text-xl">Enjoy increased viewer engagement and improved content navigation</li>
-              </ol>
-            </div>
-          </section>
+          <HowItWorks />
 
           {/* Testimonials Section */}
           <section className="py-16 px-4 relative z-10">
@@ -261,7 +255,7 @@ export default function SaasVideoLandingPage() {
               {!videoFile ? (
                 <VideoInputScreen onNext={handleVideoUpload} />
               ) : (
-                <VideoPlayerScreen videoFile={videoFile} chapters={chapters} />
+                <VideoPlayerScreen videoFile={videoFile} chapters={chapters} onBack={resetUpload} />
               )}
             </section>
           )}
