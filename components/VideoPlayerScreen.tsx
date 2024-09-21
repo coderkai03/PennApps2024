@@ -16,14 +16,7 @@ interface Chapter {
   startTime: number
 }
 
-const dummyChapters: Chapter[] = [
-  { id: "1", title: "Introduction", description: "Brief overview of the video content", startTime: 0 },
-  { id: "2", title: "Main Topic", description: "Detailed explanation of the main subject", startTime: 60 },
-  { id: "3", title: "Examples", description: "Practical examples and demonstrations", startTime: 180 },
-  { id: "4", title: "Conclusion", description: "Summary and closing thoughts", startTime: 300 },
-]
-
-export default function VideoPlayerScreen({ videoFile }: { videoFile: File }) {
+export default function VideoPlayerScreen({ videoFile, chapters = [] }: { videoFile: File, chapters?: Chapter[] }) {
   const [videoSrc, setVideoSrc] = useState<string | null>(null)
 
   useEffect(() => {
@@ -52,24 +45,28 @@ export default function VideoPlayerScreen({ videoFile }: { videoFile: File }) {
       </div>
       <div className="w-80 p-4 bg-card border-l">
         <h2 className="text-xl font-bold mb-4">Chapters</h2>
-        <Accordion type="single" collapsible className="w-full">
-          {dummyChapters.map((chapter) => (
-            <AccordionItem value={chapter.id} key={chapter.id}>
-              <AccordionTrigger>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => handleChapterClick(chapter.startTime)}
-                >
-                  {chapter.title}
-                </Button>
-              </AccordionTrigger>
-              <AccordionContent>
-                <p className="text-sm text-muted-foreground">{chapter.description}</p>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        {chapters.length > 0 ? (
+          <Accordion type="single" collapsible className="w-full">
+            {chapters.map((chapter) => (
+              <AccordionItem value={chapter.id} key={chapter.id}>
+                <AccordionTrigger>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => handleChapterClick(chapter.startTime)}
+                  >
+                    {chapter.title}
+                  </Button>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-sm text-muted-foreground">{chapter.description}</p>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        ) : (
+          <p className="text-sm text-muted-foreground">No chapters available.</p>
+        )}
       </div>
     </div>
   )

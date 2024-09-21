@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useTheme } from "next-themes"
 
-export default function VideoInputScreen({ onNext }: { onNext: (file: File) => void }) {
+export default function VideoInputScreen({ onNext }: { onNext: (file: File, chapters: any) => void }) {
   const [file, setFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
@@ -22,9 +23,44 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File) => v
     }
   }
 
-  const handleNext = () => {
+  const handleUpload = async () => {
     if (file) {
-      onNext(file)
+      setUploading(true)
+      const formData = new FormData()
+      formData.append('video', file)
+
+      try {
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        })
+
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload video')
+        }
+
+        const { videoUrl } = await uploadResponse.json()
+
+        const processResponse = await fetch('/api/process-video', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ videoUrl }),
+        })
+
+        if (!processResponse.ok) {
+          throw new Error('Failed to process video')
+        }
+
+        const result = await processResponse.json()
+        onNext(file, result.chapters)
+      } catch (error) {
+        console.error('Error uploading and processing video:', error)
+        // Handle error (e.g., show error message to user)
+      } finally {
+        setUploading(false)
+      }
     }
   }
 
@@ -59,12 +95,18 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File) => v
           </p>
         )}
         <Button
-          onClick={handleNext}
-          disabled={!file}
+          onClick={handleUpload}
+          disabled={!file || uploading}
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
         >
-          <Upload className="w-4 h-4 mr-2" />
-          Next
+          {uploading ? (
+            <>Processing...</>
+          ) : (
+            <>
+              <Upload className="w-4 h-4 mr-2" />
+              Upload and Process
+            </>
+          )}
         </Button>
       </div>
     </div>
