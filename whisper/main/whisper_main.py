@@ -5,6 +5,7 @@ import json
 from keybert import KeyBERT
 from supabase import create_client
 from dotenv import load_dotenv
+from silencer import remove_silent_parts
 
 # Load environment variables from .env file
 load_dotenv()
@@ -21,13 +22,16 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 input_folder = os.path.join(current_dir, "input_videos")
 output_folder = os.path.join(current_dir, "output_videos")
 
+# Ensure the output folder exists
+os.makedirs(output_folder, exist_ok=True)
+
 # Load the Whisper model
 model = whisper.load_model("base")
 kw_model = KeyBERT()
 
 def parse_transcript(transcript, video_title):
     parsed_data = []
-    segments = transcript.strip().split("\n\n")  # Split by double newlines
+    segments = transcript.strip().split("\n\n")  
 
     for segment in segments:
         segment_data = {}
@@ -55,7 +59,6 @@ def parse_transcript(transcript, video_title):
             parsed_data.append(segment_data)
 
     return parsed_data
-
 
 def insert_to_supabase(data):
     # Insert data into Supabase
@@ -98,13 +101,16 @@ def process_video(video_path, output_path):
     insert_response = insert_to_supabase(formatted_data)
     print(f"Inserted into Supabase: {insert_response}")
 
-
-# Process all MP4 files in the input folder
+# Invoke the silencer to process all videos and remove silent parts
 for filename in os.listdir(input_folder):
     if filename.endswith(".mp4"):
         video_path = os.path.join(input_folder, filename)
-        output_filename = filename.replace(".mp4", "_transcription.txt")
+        output_filename = filename.replace(".mp4", "_nosilence.mp4")
         output_path = os.path.join(output_folder, output_filename)
-        
-        # Process each video and insert transcript data into Supabase
-        process_video(video_path, output_path)
+
+        # Call the remove_silent_parts function from silencer.py
+        remove_silent_parts(video_path, output_path)
+
+        # After silence removal, process the video
+        transcription_output_path = output_path.replace(".mp4", "_transcription.txt")
+        process_video(output_path, transcription_output_path)
