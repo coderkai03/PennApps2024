@@ -21,35 +21,41 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 input_folder = os.path.join(current_dir, "input_videos")
 output_folder = os.path.join(current_dir, "output_videos")
 
-# Create output folder if it doesn't exist
-if not os.path.exists(output_folder):
-    os.makedirs(output_folder)
-
 # Load the Whisper model
 model = whisper.load_model("base")
 kw_model = KeyBERT()
 
-def parse_transcript(transcript):
-    entries = []
-    segments = transcript.strip().split("\n\n")
-    
+def parse_transcript(transcript, video_title):
+    parsed_data = []
+    segments = transcript.strip().split("\n\n")  # Split by double newlines
+
     for segment in segments:
-        lines = segment.strip().split("\n")
         segment_data = {}
-        
+        lines = segment.split("\n")
+
         for line in lines:
             if line.startswith("Segment Start:"):
-                start_end = line.replace("Segment Start:", "").strip().split(",")
-                segment_data["start"] = float(start_end[0].strip().replace("s", ""))
-                segment_data["end"] = float(start_end[1].strip().replace("s", ""))
+                # Split the line by commas to separate start and end
+                start_end = line.split(",")
+                start_time = start_end[0].split(":")[1].strip().replace("s", "")
+                end_time = start_end[1].split(":")[1].strip().replace("s", "")
+                
+                segment_data["start"] = float(start_time)
+                segment_data["end"] = float(end_time)
             elif line.startswith("Text:"):
-                segment_data["text"] = line.replace("Text:", "").strip()
+                segment_data["text"] = line.split(":")[1].strip()
             elif line.startswith("Keywords:"):
-                segment_data["keywords"] = line.replace("Keywords:", "").strip().split(", ")
-        
-        entries.append(segment_data)
-    
-    return entries
+                segment_data["keywords"] = line.split(":")[1].strip()
+
+        # Add the video title to each segment
+        segment_data["video_title"] = video_title
+
+        # Add to the list only if start and end times are present
+        if "start" in segment_data and "end" in segment_data:
+            parsed_data.append(segment_data)
+
+    return parsed_data
+
 
 def insert_to_supabase(data):
     # Insert data into Supabase
@@ -57,17 +63,20 @@ def insert_to_supabase(data):
     return response
 
 def process_video(video_path, output_path):
+    video_title = os.path.splitext(os.path.basename(video_path))[0]  # Extract the video title
     audio_path = output_path.replace(".txt", ".wav")
+    
     try:
+        # Extract audio from video using ffmpeg
         subprocess.run(['ffmpeg', '-i', video_path, audio_path], check=True)
     except Exception as e:
         print(f"Error converting video: {e}")
         return
 
-    # Transcribe audio
+    # Transcribe audio using Whisper model
     result = model.transcribe(audio_path)
 
-    # Prepare the result text
+    # Prepare the result text with segments
     result_text = ""
     for segment in result["segments"]:
         start_time = segment["start"]
@@ -84,10 +93,11 @@ def process_video(video_path, output_path):
     with open(output_path, "w") as f:
         f.write(result_text)
 
-    # Parse the transcript and insert into Supabase
-    formatted_data = parse_transcript(result_text)
+    # Parse the transcript and insert into Supabase, including the video title
+    formatted_data = parse_transcript(result_text, video_title)
     insert_response = insert_to_supabase(formatted_data)
     print(f"Inserted into Supabase: {insert_response}")
+
 
 # Process all MP4 files in the input folder
 for filename in os.listdir(input_folder):
@@ -96,4 +106,5 @@ for filename in os.listdir(input_folder):
         output_filename = filename.replace(".mp4", "_transcription.txt")
         output_path = os.path.join(output_folder, output_filename)
         
+        # Process each video and insert transcript data into Supabase
         process_video(video_path, output_path)
