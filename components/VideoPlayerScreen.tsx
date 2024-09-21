@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Accordion,
@@ -24,11 +24,13 @@ const dummyChapters: Chapter[] = [
 ]
 
 export default function VideoPlayerScreen({ videoFile }: { videoFile: File }) {
-  const [setCurrentTime] = useState(0)
+  const [videoSrc, setVideoSrc] = useState<string | null>(null)
 
-  const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    setCurrentTime(e.currentTarget.currentTime)
-  }
+  useEffect(() => {
+    const src = URL.createObjectURL(videoFile)
+    setVideoSrc(src)
+    return () => URL.revokeObjectURL(src)
+  }, [videoFile])
 
   const handleChapterClick = (startTime: number) => {
     const videoElement = document.querySelector("video")
@@ -37,14 +39,15 @@ export default function VideoPlayerScreen({ videoFile }: { videoFile: File }) {
     }
   }
 
+  if (!videoSrc) return null
+
   return (
     <div className="flex h-screen bg-background">
       <div className="flex-1 p-4">
         <video
-          src={URL.createObjectURL(videoFile)}
+          src={videoSrc}
           controls
           className="w-full h-auto max-h-[calc(100vh-2rem)]"
-          onTimeUpdate={handleTimeUpdate}
         />
       </div>
       <div className="w-80 p-4 bg-card border-l">
