@@ -161,6 +161,10 @@ export default function SaasVideoLandingPage() {
     setChapters(processedChapters)
   }
 
+  const resetUpload = () => {
+    setVideoFile(null);
+  };
+
   const scrollToVideoInput = () => {
     setShowVideoInput(true);
     setTimeout(() => {
@@ -261,7 +265,7 @@ export default function SaasVideoLandingPage() {
               {!videoFile ? (
                 <VideoInputScreen onNext={handleVideoUpload} />
               ) : (
-                <VideoPlayerScreen videoFile={videoFile} chapters={chapters} />
+                <VideoPlayerScreen videoFile={videoFile} chapters={chapters} onBack={resetUpload}/>
               )}
             </section>
           )}

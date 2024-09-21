@@ -16,7 +16,7 @@ interface Chapter {
   startTime: number
 }
 
-export default function VideoPlayerScreen({ videoFile, chapters = [] }: { videoFile: File, chapters?: Chapter[] }) {
+export default function VideoPlayerScreen({ videoFile, chapters = [], onBack }: { videoFile: File, chapters?: Chapter[], onBack: () => void }) {
   const [videoSrc, setVideoSrc] = useState<string | null>(null)
 
   useEffect(() => {
@@ -67,6 +67,9 @@ export default function VideoPlayerScreen({ videoFile, chapters = [] }: { videoF
         ) : (
           <p className="text-sm text-muted-foreground">No chapters available.</p>
         )}
+        <Button onClick={onBack} className="mt-4">
+          Back to Upload
+        </Button>
       </div>
     </div>
   )
