@@ -6,10 +6,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useTheme } from "next-themes"
+import { Progress } from "@/components/ui/progress"
 
-export default function VideoInputScreen({ onNext }: { onNext: (file: File, chapters: any) => void }) {
+interface Chapter {
+  title: string;
+  startTime: number;
+  endTime: number;
+}
+
+export default function VideoInputScreen({ onNext }: { onNext: (file: File, chapters: Chapter[]) => void }) {
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
@@ -26,35 +34,49 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
   const handleUpload = async () => {
     if (file) {
       setUploading(true)
+      setUploadProgress(0)
       const formData = new FormData()
       formData.append('video', file)
 
       try {
-        const uploadResponse = await fetch('/api/upload', {
+        const response = await fetch('/api/upload', {
           method: 'POST',
           body: formData,
         })
 
-        if (!uploadResponse.ok) {
-          throw new Error('Failed to upload video')
+        const reader = response.body!.getReader()
+        const decoder = new TextDecoder()
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value)
+          const updates = chunk.split('\n').filter(Boolean).map(JSON.parse)
+
+          for (const update of updates) {
+            if (update.progress) {
+              setUploadProgress(update.progress)
+            }
+            if (update.videoUrl) {
+              // Video upload is complete, now process the video
+              const processResponse = await fetch('/api/process-video', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ videoUrl: update.videoUrl }),
+              })
+
+              if (!processResponse.ok) {
+                throw new Error('Failed to process video')
+              }
+
+              const result = await processResponse.json()
+              onNext(file, result.chapters)
+            }
+          }
         }
-
-        const { videoUrl } = await uploadResponse.json()
-
-        const processResponse = await fetch('/api/process-video', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ videoUrl }),
-        })
-
-        if (!processResponse.ok) {
-          throw new Error('Failed to process video')
-        }
-
-        const result = await processResponse.json()
-        onNext(file, result.chapters)
       } catch (error) {
         console.error('Error uploading and processing video:', error)
         // Handle error (e.g., show error message to user)
@@ -100,7 +122,7 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           {uploading ? (
-            <>Processing...</>
+            <>Uploading...</>
           ) : (
             <>
               <Upload className="w-4 h-4 mr-2" />
@@ -108,6 +130,14 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
             </>
           )}
         </Button>
+        {uploading && (
+          <div className="space-y-2">
+            <Progress value={uploadProgress} className="w-full" />
+            <p className="text-sm text-center text-muted-foreground dark:text-gray-400">
+              Upload progress: {uploadProgress}%
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

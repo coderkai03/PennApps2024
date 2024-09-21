@@ -35,8 +35,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       try {
-        const result = await s3.upload(uploadParams).promise()
-        res.status(200).json({ videoUrl: result.Location })
+        const uploadPromise = s3.upload(uploadParams).promise()
+        
+        // Set up progress tracking
+        let progress = 0
+        s3.upload(uploadParams).on('httpUploadProgress', (evt) => {
+          progress = Math.round((evt.loaded / evt.total) * 100)
+          res.write(JSON.stringify({ progress }))
+        }).send((err: Error, data: AWS.S3.ManagedUpload.SendData) => {
+          if (err) throw err;
+          res.write(JSON.stringify({ progress: 100, videoUrl: data.Location }))
+          res.end()
+        })
+
+        await uploadPromise
       } catch (error) {
         console.error('Error uploading to S3:', error)
         res.status(500).json({ error: 'Error uploading file' })
