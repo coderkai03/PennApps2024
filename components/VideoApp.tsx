@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Star, Play, Check, Sun, Moon, User } from 'lucide-react';
+import { ChevronDown, Star, Play, Check, Sun, Moon, User, Clapperboard, Edit, Sparkles, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import VideoInputScreen from "./VideoInputScreen";
@@ -177,8 +177,8 @@ export default function SaasVideoLandingPage() {
 
   return (
     <>
-      {isLoading && <Loading onLoadingComplete={handleLoadingComplete} />}
-      {!isLoading && (
+      {/* {isLoading && <Loading onLoadingComplete={handleLoadingComplete} />} */}
+      {isLoading && (
         <div className="min-h-screen bg-gradient-to-b from-blue-100 to-white dark:from-gray-900 dark:to-black text-black dark:text-white relative">
           <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full pointer-events-none" />
   
@@ -203,40 +203,40 @@ export default function SaasVideoLandingPage() {
 
           {/* Hero Section */}
           <section className="h-screen flex flex-col justify-center items-center text-center p-4 relative z-10">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">Transform Your Videos with AI</h1>
-            <p className="text-xl md:text-2xl mb-8">Automatically generate chapters and enhance your video content</p>
-            <Button onClick={handleAuthenticatedAction} className="text-lg py-6 px-8">
-              {user ? "Get Started - Upload Your Video" : "Login to Get Started"}
-            </Button>
-            <ChevronDown className="mt-12 animate-bounce" size={48} />
+          <div className="flex items-center mb-8">
+        <Clapperboard className="text-purple-400 mr-4 w-[1em] h-[1em] text-[4rem] md:text-[6rem]" />
+        <h1 className="text-4xl md:text-6xl font-bold sm:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+          Editly
+        </h1>
+      </div>
+      <p className="text-xl md:text-2xl mb-20">Transform Your Personal Brand with AI</p>
+      <Button onClick={handleAuthenticatedAction} className="text-lg py-6 px-8">
+        {user ? "Get Started" : "Login to Get Started"}
+      </Button>
+      <ChevronDown className="mt-16 animate-bounce" size={48} />
           </section>
 
           {/* Features Section */}
           <section className="py-16 px-4 relative z-10">
             <h2 className="text-3xl font-bold text-center mb-12">Features</h2>
-            <div className="flex flex-wrap justify-center">
-              <Feature
-                title="AI-Powered Chapters"
-                description="Our advanced AI analyzes your video content to create intelligent chapter breakdowns."
-                icon={<Star className="text-yellow-500" />}
-              />
-              <Feature
-                title="Enhanced Navigation"
-                description="Viewers can easily jump to specific sections of your video using the generated chapters."
-                icon={<Play className="text-green-500" />}
-              />
-              <Feature
-                title="Time-Saving Automation"
-                description="Automate the process of creating video chapters, saving you hours of manual work."
-                icon={<Check className="text-blue-500" />}
-              />
-            </div>
+            <div className="flex flex-wrap justify-center mt-10">
+          <Feature
+            title="Content Fusion"
+            description="Seamlessly blend different types of content to create unique and engaging videos."
+            icon={<Wand2 className="text-purple-500" />}
+          />
+          <Feature
+            title="Automated Editing"
+            description="Let our AI handle the editing process, saving you time and effort while ensuring professional results."
+            icon={<Edit className="text-blue-500" />}
+          />
+        </div>
           </section>
 
           {/* How It Works Section */}
           <HowItWorks />
 
-          {/* Testimonials Section */}
+          {/* Testimonials Section
           <section className="py-16 px-4 relative z-10">
             <h2 className="text-3xl font-bold text-center mb-12">What Our Users Say</h2>
             <div className="flex flex-wrap justify-center">
@@ -256,7 +256,7 @@ export default function SaasVideoLandingPage() {
                 role="E-learning Director at EduOnline"
               />
             </div>
-          </section>
+          </section> */}
 
           {/* Video Input Section */}
           {showVideoInput && (
@@ -271,11 +271,11 @@ export default function SaasVideoLandingPage() {
           )}
 
           {/* Call to Action Section */}
-          <section className="py-16 px-4 bg-blue-600 dark:bg-blue-800 text-white relative z-10">
+          <section className="py-16 px-4 bg-black dark:bg-white text-white dark:text-black relative z-10">
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-3xl font-bold mb-4">Ready to Enhance Your Videos?</h2>
               <p className="text-xl mb-8">Join thousands of content creators who are already benefiting from our AI-powered video chapters.</p>
-              <Button onClick={scrollToVideoInput} className="text-lg py-6 px-8 bg-white text-blue-600 dark:text-blue-800 hover:bg-blue-100">
+              <Button onClick={scrollToVideoInput} className="text-lg py-6 px-8 bg-white text-black dark:bg-black dark:text-white hover:bg-blue-100">
                 Upload Your First Video
               </Button>
             </div>
