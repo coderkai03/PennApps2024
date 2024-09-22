@@ -1,0 +1,6 @@
+opencv-python-headless
+boto3
+moviepy
+SpeechRecognition
+openai
+numpy

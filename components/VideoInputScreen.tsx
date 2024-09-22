@@ -8,6 +8,7 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
   const [mounted, setMounted] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+
   const [uploadProgress, setUploadProgress] = useState(0)
   const [processingProgress, setProcessingProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
@@ -21,49 +22,38 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
     setError(null)
 
     try {
-      // Simulating file upload
-      await simulateFileUpload(file, (progress) => setUploadProgress(progress))
-      setIsUploading(false)
-      setIsProcessing(true)
+      const formData = new FormData()
+      formData.append('video', file)
 
-      // Simulating video processing
-      const chapters = await simulateVideoProcessing((progress) => setProcessingProgress(progress))
-      
+      const uploadResponse = await fetch('/api/process-local-video', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload and process video')
+      }
+
+      const result = await uploadResponse.json()
+
+      setIsUploading(false)
       setIsProcessing(false)
+
+      // Assuming the API returns the cropped videos information
+      // You might need to adjust this based on the actual response structure
+      const chapters: Chapter[] = result.croppedVideos.map((video: { start_time: number, end_time: number }, index: number) => ({
+        id: `${index + 1}`,
+        title: `Chapter ${index + 1}`,
+        startTime: video.start_time,
+        endTime: video.end_time,
+      }))
+
       onNext(file, chapters, reels)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred')
       setIsUploading(false)
       setIsProcessing(false)
     }
-  }
-
-  const simulateFileUpload = (file: File, progressCallback: (progress: number) => void): Promise<void> => {
-    return new Promise((resolve) => {
-      let progress = 0
-      const interval = setInterval(() => {
-        progress += 10
-        progressCallback(progress)
-        if (progress >= 100) {
-          clearInterval(interval)
-          resolve()
-        }
-      }, 500)
-    })
-  }
-
-  const simulateVideoProcessing = (progressCallback: (progress: number) => void): Promise<Chapter[]> => {
-    return new Promise((resolve) => {
-      let progress = 0
-      const interval = setInterval(() => {
-        progress += 10
-        progressCallback(progress)
-        if (progress >= 100) {
-          clearInterval(interval)
-          resolve([{ id: '1', title: 'Chapter 1', startTime: 0, endTime: 60 }]) // Mock chapters
-        }
-      }, 500)
-    })
   }
 
   if (!mounted) return null

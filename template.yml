@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Auto Cropper Lambda Function
+
+Resources:
+  AutoCropperFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      ImageConfig:
+        Command: ["auto_cropper.lambda_handler"]
+      Environment:
+        Variables:
+          OPENAI_API_KEY: ${OPENAI_API_KEY}
+          S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      Policies:
+        - S3FullAccessPolicy:
+            BucketName: !Ref S3BucketName
+        - AWSLambdaBasicExecutionRole
+      Events:
+        AutoCropperApi:
+          Type: Api
+          Properties:
+            Path: /autocropper
+            Method: post
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
+
+Globals:
+  Function:
+    Timeout: 900
+
+Parameters:
+  S3BucketName:
+    Type: String
+    Description: Name of the S3 bucket to store videos
