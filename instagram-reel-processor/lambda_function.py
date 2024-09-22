@@ -1,5 +1,6 @@
 import json
 import os
+import time
 import tempfile
 from urllib.parse import urlparse, parse_qs
 import instaloader
@@ -14,6 +15,10 @@ import imagehash
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
 import torch
 import librosa
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 def extract_shortcode(url):
     parsed_url = urlparse(url)
@@ -231,7 +236,23 @@ def lambda_handler(event, context):
         with tempfile.TemporaryDirectory() as tmp_dir:
             post = download_reel(reel_url, tmp_dir)
             if post:
-                process_video_to_text(tmp_dir, post)
+                max_retries = 5
+                base_delay = 1  # Start with a 1-second delay
+                
+                for attempt in range(max_retries):
+                    try:
+                        video_path = find_video_file(tmp_dir)
+                        if video_path:
+                            process_video_to_text(tmp_dir, post)
+                            break
+                        else:
+                            delay = base_delay * (2 ** attempt)  # Exponential backoff
+                            logger.info(f"Video file not found. Retrying in {delay} seconds. Attempt {attempt + 1}/{max_retries}")
+                            time.sleep(delay)
+                    except FileNotFoundError:
+                        if attempt == max_retries - 1:
+                            raise
+                        continue
                 
                 results_path = os.path.join(tmp_dir, "video_analysis.txt")
                 logger.info(f"Checking for results file: {results_path}")
