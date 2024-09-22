@@ -1,0 +1,12 @@
+instaloader
+moviepy
+pydub
+opencv-python-headless
+numpy
+scipy
+pillow
+imagehash
+transformers
+torch
+librosa
+
