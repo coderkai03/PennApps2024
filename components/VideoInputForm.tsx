@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { InstagramReel } from '@/lib/types';
+import { auth } from "../lib/firebase"
 
 interface VideoInputFormProps {
   onSubmit: (file: File, reels: InstagramReel[]) => void;
@@ -15,13 +16,13 @@ interface VideoInputFormProps {
   error: string | null;
 }
 
-export default function VideoInputForm({ 
-  onSubmit, 
-  isUploading, 
-  isProcessing, 
-  uploadProgress, 
-  processingProgress, 
-  error 
+export default function VideoInputForm({
+  onSubmit,
+  isUploading,
+  isProcessing,
+  uploadProgress,
+  processingProgress,
+  error
 }: VideoInputFormProps) {
   const [file, setFile] = useState<File | null>(null);
   const [reels, setReels] = useState<InstagramReel[]>([]);
@@ -46,9 +47,40 @@ export default function VideoInputForm({
     setReels(updatedReels);
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (file) {
       onSubmit(file, reels);
+
+      const user = auth.currentUser;
+      if (!user) {
+        console.error('No user logged in');
+        return;
+      }
+
+      const userId = user.uid;
+      console.log(userId);
+
+      try {
+        const response = await fetch('http://127.0.0.1:5000/save-reels', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: userId, 
+            reels: reels,   
+          }),
+        });
+
+        if (!response.ok) {
+          console.error('Failed to save reels:', response.statusText);
+        } else {
+          const result = await response.json();
+          console.log('Reels saved successfully:', result);
+        }
+      } catch (error) {
+        console.error('Error uploading reels:', error);
+      }
     }
   };
 

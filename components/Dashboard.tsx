@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import { Instagram, Plus } from 'lucide-react';
+import { supabase } from "../lib/supabaseClient"
 
 const mockUserVideos = [
   { id: 1, title: 'Summer Vibes', status: 'Completed', color: 'bg-blue-200' },
@@ -31,6 +32,12 @@ interface InspoLinkCardProps {
   status: string;
 }
 
+interface InspoLink {
+  id: string;
+  reel_url: string;
+}
+
+
 const VideoCard = ({ title, status, color }: VideoCardProps) => (
   <Card className="overflow-hidden">
     <div className={`w-full h-40 ${color}`} />
@@ -46,107 +53,151 @@ const VideoCard = ({ title, status, color }: VideoCardProps) => (
   </Card>
 );
 
-const InspoLinkCard = ({ url, status }: InspoLinkCardProps) => (
+const InspoLinkCard = ({ url }: { url: string }) => (
   <Card className="flex items-center justify-between p-4">
     <div className="flex items-center">
       <Instagram className="mr-2 text-pink-500" size={20} />
-      <span className="text-sm truncate max-w-[200px]">{url}</span>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm truncate max-w-[200px] text-blue-600 hover:underline"
+      >
+        {url}
+      </a>
     </div>
-    <span className={`text-sm ${status === 'Used' ? 'text-green-500' : 'text-yellow-500'}`}>
-      {status}
-    </span>
   </Card>
 );
 
+
+
 export default function Dashboard() {
-    const { user, signOut } = useAuth();
-    const [isLoading, setIsLoading] = useState(true);
-    const router = useRouter();
-    const [newInspoLink, setNewInspoLink] = useState('');
-  
-    useEffect(() => {
-      let isMounted = true;
-      if (user !== undefined && isMounted) {
+  const { user, signOut } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const [newInspoLink, setNewInspoLink] = useState('');
+  const [inspoLinks, setInspoLinks] = useState<InspoLink[]>([]); // State for the fetched links
+  const router = useRouter();
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchInspoLinks = async () => {
+      if (!user) return;
+
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('reels') 
+          .select('id, reel_url')
+          .eq('user_id', user.uid) 
+          .order('id', { ascending: false });
+
+        if (error) {
+          throw error;
+        }
+
+        if (isMounted) {
+          setInspoLinks(data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching inspiration links:', error);
+      } finally {
         setIsLoading(false);
       }
-      return () => {
-        isMounted = false;
-      };
-    }, [user]);
-  
-    useEffect(() => {
-      if (!isLoading && !user) {
-        router.push('/login');
-      }
-    }, [user, isLoading, router]);
-  
-    const handleSignOut = async () => {
-      try {
-        await signOut();
-        router.push('/');
-      } catch (error) {
-        console.error('Failed to sign out', error);
-      }
     };
-  
-    const handleAddInspoLink = () => {
-      console.log('Adding new inspiration link:', newInspoLink);
-      setNewInspoLink('');
+
+    if (user) {
+      fetchInspoLinks();
+    }
+
+    return () => {
+      isMounted = false;
     };
-  
-    if (isLoading) {
-      return <div>Loading...</div>;
+  }, [user]);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (user !== undefined && isMounted) {
+      setIsLoading(false);
     }
-  
-    if (!user) {
-      return null;
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login');
     }
-  
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white dark:from-gray-900 dark:to-black text-black dark:text-white p-8">
-        <div className="max-w-7xl mx-auto">
-          <header className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-bold">AI Video Dashboard</h1>
-            <Button variant="outline" onClick={handleSignOut}>Sign Out</Button>
-          </header>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Your Videos</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {mockUserVideos.map(video => (
-                  <VideoCard key={video.id} title={video.title} status={video.status} color={video.color} />
-                ))}
-              </div>
-              <div className="mt-4">
-                <Button onClick={() => router.push('/generate')}>
-                  Generate New Video
+  }, [user, isLoading, router]);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      router.push('/');
+    } catch (error) {
+      console.error('Failed to sign out', error);
+    }
+  };
+
+  const handleAddInspoLink = () => {
+    console.log('Adding new inspiration link:', newInspoLink);
+    setNewInspoLink('');
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white dark:from-gray-900 dark:to-black text-black dark:text-white p-8">
+      <div className="max-w-7xl mx-auto">
+        <header className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold">AI Video Dashboard</h1>
+          <Button variant="outline" onClick={handleSignOut}>Sign Out</Button>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div>
+            <h2 className="text-2xl font-semibold mb-4">Your Videos</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {mockUserVideos.map(video => (
+                <VideoCard key={video.id} title={video.title} status={video.status} color={video.color} />
+              ))}
+            </div>
+            <div className="mt-4">
+              <Button onClick={() => router.push('/generate')}>
+                Generate New Video
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-semibold mb-4">Inspiration Links</h2>
+            <Card className="p-4 mb-4">
+              <div className="flex space-x-2">
+                <Input
+                  placeholder="Paste Instagram link"
+                  value={newInspoLink}
+                  onChange={(e) => setNewInspoLink(e.target.value)}
+                />
+                <Button onClick={handleAddInspoLink}>
+                  <Plus size={20} />
                 </Button>
               </div>
-            </div>
-  
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Inspiration Links</h2>
-              <Card className="p-4 mb-4">
-                <div className="flex space-x-2">
-                  <Input 
-                    placeholder="Paste Instagram link"
-                    value={newInspoLink}
-                    onChange={(e) => setNewInspoLink(e.target.value)}
-                  />
-                  <Button onClick={handleAddInspoLink}>
-                    <Plus size={20} />
-                  </Button>
-                </div>
-              </Card>
-              <div className="space-y-4">
-                {mockInspoLinks.map(link => (
-                  <InspoLinkCard key={link.id} url={link.url} status={link.status} />
-                ))}
-              </div>
+            </Card>
+            <div className="space-y-4">
+              {inspoLinks.map(link => (
+                <InspoLinkCard key={link.id} url={link.reel_url} />
+              ))}
             </div>
           </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
