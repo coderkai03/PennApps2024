@@ -1,22 +1,26 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Upload } from "lucide-react"
+import { Upload, Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useTheme } from "next-themes"
 import { Progress } from "@/components/ui/progress"
+import { Chapter } from '@/lib/types'
 
-export default function VideoInputScreen({ onNext }: { onNext: (file: File, chapters: Chapter[]) => void }) {
+interface InstagramReel {
+  url: string;
+}
+
+export default function VideoInputScreen({ onNext }: { onNext: (file: File, chapters: Chapter[], reels: InstagramReel[]) => void }) {
   const [file, setFile] = useState<File | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [processingProgress, setProcessingProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [reels, setReels] = useState<InstagramReel[]>([])
 
   useEffect(() => {
     setMounted(true)
@@ -27,6 +31,23 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
       setFile(e.target.files[0])
       setError(null)
     }
+  }
+
+  const handleAddReel = () => {
+    if (reels.length < 3) {
+      setReels([...reels, { url: '' }])
+    }
+  }
+
+  const handleRemoveReel = (index: number) => {
+    const newReels = reels.filter((_, i) => i !== index)
+    setReels(newReels)
+  }
+
+  const handleReelUrlChange = (index: number, url: string) => {
+    const newReels = [...reels]
+    newReels[index].url = url
+    setReels(newReels)
   }
 
   const handleUpload = async () => {
@@ -44,7 +65,7 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
           if (event.lengthComputable) {
             let progress = (event.loaded / event.total) * 100
             if (progress >= 95) {
-              progress = 95 // Cap the progress at 99% during upload
+              progress = 95 // Cap the progress at 95% during upload
             }
             setUploadProgress(progress)
           }
@@ -52,17 +73,32 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
 
         xhr.onload = async () => {
           if (xhr.status === 200) {
-            const { videoUrl } = JSON.parse(xhr.responseText)
-            setIsUploading(false)
-            setIsProcessing(true)
-            await processVideo(videoUrl)
+            try {
+              // Split the response by '}' and parse the last valid JSON object
+              const jsonStrings = xhr.responseText.split('}');
+              const lastValidJson = jsonStrings[jsonStrings.length - 2] + '}';
+              const response = JSON.parse(lastValidJson);
+
+              if (response && response.videoUrl) {
+                setIsUploading(false)
+                setIsProcessing(true)
+                await processVideo(response.videoUrl)
+              } else {
+                throw new Error('Invalid response format')
+              }
+            } catch (parseError) {
+              console.error('Error parsing server response:', parseError)
+              console.log('Server response:', xhr.responseText)
+              setError('Failed to process server response. Please try again.')
+              setIsUploading(false)
+            }
           } else {
-            throw new Error('Upload failed')
+            throw new Error(`Upload failed with status ${xhr.status}`)
           }
         }
 
         xhr.onerror = () => {
-          throw new Error('Upload failed')
+          throw new Error('Network error during upload')
         }
 
         xhr.send(formData)
@@ -89,15 +125,14 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
         throw new Error('Failed to process video')
       }
 
-      // thiis is only a simulation for processing 
+      // This is only a simulation for processing 
       for (let i = 0; i <= 100; i += 20) { 
         setProcessingProgress(i)
         await new Promise(resolve => setTimeout(resolve, 200)) 
       }
 
-
       const result = await processResponse.json()
-      onNext(file!, result.chapters)
+      onNext(file!, result.chapters, reels)
     } catch (error) {
       console.error('Error processing video:', error)
       setError('Failed to process video. Please try again.')
@@ -107,10 +142,6 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
     }
   }
 
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark')
-  }
-
   if (!mounted) return null
 
   return (
@@ -118,9 +149,6 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
       <div className="w-full max-w-md p-8 space-y-4 bg-card dark:bg-gray-800 rounded-lg shadow-lg">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-center text-foreground dark:text-white">Upload Video</h1>
-          <Button onClick={toggleTheme} variant="outline" size="sm">
-            {theme === 'dark' ? '🌞' : '🌙'}
-          </Button>
         </div>
         <div className="space-y-2">
           <Label htmlFor="video-upload" className="text-foreground dark:text-white">Select a video file</Label>
@@ -138,6 +166,28 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
             Selected file: {file.name}
           </p>
         )}
+        <div className="space-y-2">
+          <Label className="text-foreground dark:text-white">Instagram Reels (Inspiration)</Label>
+          {reels.map((reel, index) => (
+            <div key={index} className="flex items-center space-x-2">
+              <Input
+                type="url"
+                placeholder="Instagram Reel URL"
+                value={reel.url}
+                onChange={(e) => handleReelUrlChange(index, e.target.value)}
+                className="flex-grow bg-background dark:bg-gray-700 text-foreground dark:text-white"
+              />
+              <Button onClick={() => handleRemoveReel(index)} variant="outline" size="icon">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          {reels.length < 3 && (
+            <Button onClick={handleAddReel} variant="outline" className="w-full">
+              <Plus className="h-4 w-4 mr-2" /> Add Instagram Reel
+            </Button>
+          )}
+        </div>
         {isUploading && (
           <div className="space-y-2">
             <Label className="text-foreground dark:text-white">Uploading...</Label>
@@ -169,14 +219,6 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
             </>
           )}
         </Button>
-        {uploading && (
-          <div className="space-y-2">
-            <Progress value={uploadProgress} className="w-full" />
-            <p className="text-sm text-center text-muted-foreground dark:text-gray-400">
-              Upload progress: {uploadProgress}%
-            </p>
-          </div>
-        )}
       </div>
     </div>
   )

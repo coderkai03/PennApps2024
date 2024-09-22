@@ -11,25 +11,9 @@ import * as THREE from 'three';
 import Lenis from '@studio-freight/lenis';
 import Loading from './Loading'
 import { useTheme } from 'next-themes';
-
-interface FeatureProps {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-}
-
-interface TestimonialProps {
-  quote: string;
-  author: string;
-  role: string;
-}
-
-interface Chapter {
-  id: string;
-  title: string;
-  description: string;
-  startTime: number;
-}
+import { Chapter, FeatureProps, TestimonialProps } from '@/lib/types';
+import { useAuth } from '@/lib/auth'; 
+import { useRouter } from 'next/navigation';
 
 const Feature: React.FC<FeatureProps> = ({ title, description, icon }) => (
   <Card className="w-full md:w-1/3 m-2 dark:bg-gray-800">
@@ -61,6 +45,9 @@ export default function SaasVideoLandingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => setMounted(true), []);
 
@@ -71,17 +58,6 @@ export default function SaasVideoLandingPage() {
   useEffect(() => {
     if (!mounted) return;
 
-    // Initialize Lenis for smooth scrolling
-    const lenis = new Lenis()
-
-    function raf(time: number) {
-      lenis.raf(time)
-      requestAnimationFrame(raf)
-    }
-
-    requestAnimationFrame(raf)
-
-    // Initialize Three.js scene
     let scene: THREE.Scene | null = null;
     let camera: THREE.PerspectiveCamera | null = null;
     let renderer: THREE.WebGLRenderer | null = null;
@@ -128,8 +104,8 @@ export default function SaasVideoLandingPage() {
       renderer.render(scene, camera);
     };
 
-    // Initialize Three.js after a short delay to ensure the canvas is in the DOM
-    const initTimeout = setTimeout(initThreeJs, 100);
+    // Initialize Three.js immediately
+    initThreeJs();
 
     // Handle window resize
     const handleResize = () => {
@@ -143,7 +119,6 @@ export default function SaasVideoLandingPage() {
     window.addEventListener('resize', handleResize);
 
     return () => {
-      clearTimeout(initTimeout);
       window.removeEventListener('resize', handleResize);
 
       // Clean up Three.js resources
@@ -174,7 +149,29 @@ export default function SaasVideoLandingPage() {
     }, 100);
   };
 
-  if (!mounted) return null;
+  // Initialize Lenis for smooth scrolling
+  const lenis = new Lenis()
+
+  function raf(time: number) {
+    lenis.raf(time)
+    requestAnimationFrame(raf)
+  }
+
+  requestAnimationFrame(raf)
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const handleAuthenticatedAction = () => {
+    if (user) {
+      scrollToVideoInput();
+    } else if (isClient) {
+      router.push('/login');
+    }
+  };
+
+  if (!mounted || !isClient) return null;
 
   return (
     <>
@@ -195,8 +192,8 @@ export default function SaasVideoLandingPage() {
           <section className="h-screen flex flex-col justify-center items-center text-center p-4 relative z-10">
             <h1 className="text-4xl md:text-6xl font-bold mb-4">Transform Your Videos with AI</h1>
             <p className="text-xl md:text-2xl mb-8">Automatically generate chapters and enhance your video content</p>
-            <Button onClick={scrollToVideoInput} className="text-lg py-6 px-8">
-              Get Started - Upload Your Video
+            <Button onClick={handleAuthenticatedAction} className="text-lg py-6 px-8">
+              {user ? "Get Started - Upload Your Video" : "Login to Get Started"}
             </Button>
             <ChevronDown className="mt-12 animate-bounce" size={48} />
           </section>
@@ -266,7 +263,7 @@ export default function SaasVideoLandingPage() {
               <h2 className="text-3xl font-bold mb-4">Ready to Enhance Your Videos?</h2>
               <p className="text-xl mb-8">Join thousands of content creators who are already benefiting from our AI-powered video chapters.</p>
               <Button onClick={scrollToVideoInput} className="text-lg py-6 px-8 bg-white text-blue-600 dark:text-blue-800 hover:bg-blue-100">
-                Upload Your First Video - It&apos;s Free!
+                Upload Your First Video
               </Button>
             </div>
           </section>

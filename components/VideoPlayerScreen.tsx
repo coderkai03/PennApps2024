@@ -11,13 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ChevronLeft, PlayCircle } from "lucide-react"
-
-interface Chapter {
-  id: string
-  title: string
-  description: string
-  startTime: number
-}
+import { Chapter } from '@/lib/types';
 
 export default function VideoPlayerScreen({ videoFile, chapters = [], onBack }: { videoFile: File, chapters?: Chapter[], onBack: () => void }) {
   const [videoSrc, setVideoSrc] = useState<string | null>(null)
