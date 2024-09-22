@@ -37,7 +37,7 @@ export default function VideoPlayerScreen({ videoFile, chapters = [], onBack }: 
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back to Upload
         </Button>
-        <h1 className="text-2xl font-bold">Video Player</h1>
+        {/* <h1 className="text-2xl font-bold">Video Player</h1> */}
         <div className="w-[100px]" /> 
       </header>
       <div className="flex flex-1 gap-4 p-4 overflow-hidden">

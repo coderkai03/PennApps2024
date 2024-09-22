@@ -15,6 +15,7 @@ import { Chapter, FeatureProps, TestimonialProps } from '@/lib/types';
 import { useAuth } from '@/lib/auth'; 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import VideoScreen from '../app/videoscreen/page';
 
 const Feature: React.FC<FeatureProps> = ({ title, description, icon }) => (
   <Card className="w-full md:w-1/3 m-2 dark:bg-gray-800">
@@ -159,10 +160,7 @@ export default function SaasVideoLandingPage() {
 
   const scrollToVideoInput = () => {
     setShowVideoInput(true);
-    setTimeout(() => {
-      const element = document.getElementById('video-input');
-      element?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+    router.push('/videoscreen')
   };
 
   const handleAuthenticatedAction = () => {
@@ -204,16 +202,16 @@ export default function SaasVideoLandingPage() {
           {/* Hero Section */}
           <section className="h-screen flex flex-col justify-center items-center text-center p-4 relative z-10">
           <div className="flex items-center mb-8">
-        <Clapperboard className="text-purple-400 mr-4 w-[1em] h-[1em] text-[4rem] md:text-[6rem]" />
-        <h1 className="text-4xl md:text-6xl font-bold sm:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
-          Editly
-        </h1>
-      </div>
-      <p className="text-xl md:text-2xl mb-20">Transform Your Personal Brand with AI</p>
-      <Button onClick={handleAuthenticatedAction} className="text-lg py-6 px-8">
-        {user ? "Get Started" : "Login to Get Started"}
-      </Button>
-      <ChevronDown className="mt-16 animate-bounce" size={48} />
+            <Clapperboard className="text-purple-400 mr-4 w-[1em] h-[1em] text-[4rem] md:text-[6rem]" />
+            <h1 className="text-4xl md:text-6xl font-bold sm:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+              Editly
+            </h1>
+          </div>
+          <p className="text-xl md:text-2xl mb-20">Transform Your Personal Brand with AI</p>
+          <Button onClick={handleAuthenticatedAction} className="text-lg py-6 px-8">
+            {user ? "Get Started" : "Login to Get Started"}
+          </Button>
+          <ChevronDown className="mt-16 animate-bounce" size={48} />
           </section>
 
           {/* Features Section */}
@@ -258,17 +256,13 @@ export default function SaasVideoLandingPage() {
             </div>
           </section> */}
 
-          {/* Video Input Section */}
-          {showVideoInput && (
-            <section id="video-input" className="py-16 px-4 relative z-10">
-              <h2 className="text-3xl font-bold text-center mb-12">Upload Your Video</h2>
-              {!videoFile ? (
-                <VideoInputScreen onNext={handleVideoUpload} />
-              ) : (
-                <VideoPlayerScreen videoFile={videoFile} chapters={chapters} onBack={resetUpload} />
-              )}
-            </section>
-          )}
+          {/* Video Input Section
+          <VideoScreen
+            showVideoInput={showVideoInput}
+            videoFile={videoFile}
+            handleVideoUpload={handleVideoUpload}
+            chapters={chapters}
+            resetUpload={resetUpload} /> */}
 
           {/* Call to Action Section */}
           <section className="py-16 px-4 bg-black dark:bg-white text-white dark:text-black relative z-10">

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useRouter } from 'next/navigation'
-import { Instagram, Plus, Home, LogOut, Loader2, Video, Link as LinkIcon, Menu } from 'lucide-react'
+import { Instagram, Plus, Home, LogOut, Loader2, Video, Link as LinkIcon, Menu, Clapperboard } from 'lucide-react'
 import { supabase } from "@/lib/supabaseClient"
 import {
   DropdownMenu,
@@ -161,13 +161,19 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white dark:from-gray-900 dark:to-black text-black dark:text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <header className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl sm:text-4xl font-bold">AI Video Dashboard</h1>
+          <button className="flex items-center" onClick={() => router.push('/')}>
+            <Clapperboard className="text-purple-400 mr-3 w-[1em] h-[1em] text-[2.5rem] md:text-[3.5rem]" />
+            <h1 className="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+              Editly
+            </h1>
+          </button>
+          <h1 className="text-2xl sm:text-4xl font-bold absolute left-1/2 transform -translate-x-1/2">Dashboard</h1>
           <div className="flex items-center space-x-2">
             <div className="hidden sm:block space-x-2">
-              <Button variant="outline" onClick={() => router.push('/')}>
+              {/* <Button variant="outline" onClick={() => router.push('/')}>
                 <Home className="w-4 h-4 mr-2" />
                 Home
-              </Button>
+              </Button> */}
               <Button variant="outline" onClick={handleSignOut}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign Out
@@ -211,8 +217,8 @@ export default function Dashboard() {
                 ))}
               </div>
               <div className="mt-6">
-                <Button onClick={() => router.push('/generate')} className="w-full">
-                  Generate New Video
+                <Button onClick={() => router.push('/videoscreen')} className="w-full">
+                  New Video +
                 </Button>
               </div>
             </CardContent>
