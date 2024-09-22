@@ -46,6 +46,8 @@ dist/
 build/
 *.egg
 *.whl
+reel_output
+lambda_function
 
 # Virtual environment
 venv/

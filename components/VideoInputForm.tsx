@@ -48,7 +48,7 @@ export default function VideoInputForm({
     setReels(updatedReels);
   };
 
-  const handleSaveReels = async (userId: string, reels: any[]) => {
+  const handleSaveReels = async (userId: string, reels: InstagramReel[]) => {
     try {
       const { data, error } = await supabase
         .from('reels')
