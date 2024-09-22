@@ -1,16 +1,20 @@
-# Use an AWS-provided base image for Python 3.8 Lambda functions
 FROM public.ecr.aws/lambda/python:3.8
 
 # Install system dependencies
 RUN yum update -y && \
-    yum install -y ffmpeg opencv
+    yum install -y wget tar xz
 
-# Install Python dependencies in multiple steps
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install FFmpeg
+RUN wget https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz && \
+    tar xvf ffmpeg-git-amd64-static.tar.xz && \
+    mv ffmpeg-git-*-amd64-static/ffmpeg /usr/local/bin/ && \
+    rm -rf ffmpeg-git-*-amd64-static*
 
-# Install PyTorch CPU version separately
-RUN pip install --no-cache-dir torch==2.2.1+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html
+# Copy requirements file
+COPY requirements.txt ${LAMBDA_TASK_ROOT}
+
+# Install Python dependencies
+RUN pip install -r requirements.txt
 
 # Copy function code
 COPY lambda_function.py ${LAMBDA_TASK_ROOT}

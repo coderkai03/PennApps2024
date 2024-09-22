@@ -4,9 +4,9 @@ pydub
 opencv-python-headless
 numpy
 scipy
-pillow
+Pillow
 imagehash
 transformers
 torch
 librosa
-
+requests
