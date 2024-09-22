@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Star, Play, Check, Sun, Moon } from 'lucide-react';
+import { ChevronDown, Star, Play, Check, Sun, Moon, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import VideoInputScreen from "./VideoInputScreen";
@@ -14,6 +14,7 @@ import { useTheme } from 'next-themes';
 import { Chapter, FeatureProps, TestimonialProps } from '@/lib/types';
 import { useAuth } from '@/lib/auth'; 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const Feature: React.FC<FeatureProps> = ({ title, description, icon }) => (
   <Card className="w-full md:w-1/3 m-2 dark:bg-gray-800">
@@ -54,6 +55,21 @@ export default function SaasVideoLandingPage() {
   const handleLoadingComplete = () => {
     setIsLoading(false);
   };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const lenis = new Lenis();
+      const raf = (time: number) => {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+      }
+      requestAnimationFrame(raf);
+    }
+  }, []);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     if (!mounted) return;
@@ -149,20 +165,6 @@ export default function SaasVideoLandingPage() {
     }, 100);
   };
 
-  // Initialize Lenis for smooth scrolling
-  const lenis = new Lenis()
-
-  function raf(time: number) {
-    lenis.raf(time)
-    requestAnimationFrame(raf)
-  }
-
-  requestAnimationFrame(raf)
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   const handleAuthenticatedAction = () => {
     if (user) {
       scrollToVideoInput();
@@ -179,14 +181,25 @@ export default function SaasVideoLandingPage() {
       {!isLoading && (
         <div className="min-h-screen bg-gradient-to-b from-blue-100 to-white dark:from-gray-900 dark:to-black text-black dark:text-white relative">
           <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full pointer-events-none" />
-
-          {/* Dark Mode Toggle */}
-          <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="fixed top-4 right-4 z-50 p-2 rounded-full bg-gray-200 dark:bg-gray-700"
-          >
-            {theme === 'dark' ? <Sun className="text-yellow-400" /> : <Moon className="text-gray-700" />}
-          </button>
+  
+          {/* User Profile and Dark Mode Toggle */}
+          <div className="fixed top-4 right-4 z-50 flex items-center space-x-2">
+            {user && (
+              <Link href="/dashboard">
+                <Button variant="ghost" size="lg" className="rounded-full p-3">
+                  <User className="h-6 w-6" />
+                </Button>
+              </Link>
+            )}
+            <Button
+              variant="ghost"
+              size="lg"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="rounded-full p-3"
+            >
+              {theme === 'dark' ? <Sun className="h-6 w-6 text-yellow-400" /> : <Moon className="h-6 w-6 text-gray-700" />}
+            </Button>
+          </div>
 
           {/* Hero Section */}
           <section className="h-screen flex flex-col justify-center items-center text-center p-4 relative z-10">

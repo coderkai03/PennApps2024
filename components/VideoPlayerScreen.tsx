@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Accordion,
-  AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
@@ -73,9 +72,6 @@ export default function VideoPlayerScreen({ videoFile, chapters = [], onBack }: 
                           <span className="truncate">{chapter.title}</span>
                         </Button>
                       </AccordionTrigger>
-                      <AccordionContent className="px-4">
-                        <p className="text-sm text-muted-foreground">{chapter.description}</p>
-                      </AccordionContent>
                     </AccordionItem>
                   ))}
                 </Accordion>

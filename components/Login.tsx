@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -13,13 +13,15 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isClient, setIsClient] = useState(false);
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signUp, signInWithGoogle, user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
-
-  const router = useRouter();
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
 
   const handleSubmit = async (e: React.FormEvent, isLogin: boolean) => {
     e.preventDefault();
@@ -30,8 +32,8 @@ export default function Auth() {
       } else {
         await signUp(email, password);
       }
-      router.push('/');
-    } catch (err) {
+      router.push('/dashboard');
+    } catch {
       setError(isLogin ? 'Failed to log in. Please check your credentials.' : 'Failed to sign up. Please try again.');
     }
   };
@@ -39,13 +41,13 @@ export default function Auth() {
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
-      router.push('/');
-    } catch (err) {
+      router.push('/dashboard');
+    } catch {
       setError('Failed to authenticate with Google.');
     }
   };
 
-  if (!isClient) {
+  if (!isClient || user) {
     return null;
   }
 
