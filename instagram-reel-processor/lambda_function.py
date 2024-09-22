@@ -34,18 +34,37 @@ def extract_shortcode(url):
         return query_params['igsh'][0]
     raise ValueError("Could not extract shortcode from the provided URL")
 
-def download_reel(reel_url, output_filename="reel"):
+def download_reel(reel_url, output_filename="reel", max_retries=3):
     L = instaloader.Instaloader()
-    try:
-        shortcode = extract_shortcode(reel_url)
-        post = instaloader.Post.from_shortcode(L.context, shortcode)
-        L.download_post(post, target=output_filename)
-        print(f"Reel downloaded successfully to folder: {output_filename}")
-        return post
-    except ValueError as ve:
-        print(f"Error: {ve}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    
+    # Set a user agent
+    L.context._session.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+    
+    for attempt in range(max_retries):
+        try:
+            shortcode = extract_shortcode(reel_url)
+            post = instaloader.Post.from_shortcode(L.context, shortcode)
+            L.download_post(post, target=output_filename)
+            logger.info(f"Reel downloaded successfully to folder: {output_filename}")
+            return post
+        except instaloader.exceptions.InstaloaderException as ie:
+            logger.warning(f"Instaloader exception (attempt {attempt + 1}/{max_retries}): {ie}")
+        except RequestException as re:
+            logger.warning(f"Request failed (attempt {attempt + 1}/{max_retries}): {re}")
+        except ValueError as ve:
+            logger.error(f"Error extracting shortcode: {ve}")
+            return None
+        except Exception as e:
+            logger.error(f"An unexpected error occurred: {e}")
+            return None
+
+        if attempt < max_retries - 1:
+            wait_time = (2 ** attempt) + random.random()
+            logger.info(f"Waiting for {wait_time:.2f} seconds before retrying...")
+            time.sleep(wait_time)
+        else:
+            logger.error("Max retries reached. Unable to download reel.")
+
     return None
 
 def analyze_video_style(video_path):
