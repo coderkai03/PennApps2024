@@ -53,21 +53,26 @@ const VideoCard = ({ title, status, color }: VideoCardProps) => (
   </Card>
 );
 
-const InspoLinkCard = ({ url }: { url: string }) => (
-  <Card className="flex items-center justify-between p-4">
-    <div className="flex items-center">
-      <Instagram className="mr-2 text-pink-500" size={20} />
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-sm truncate max-w-[200px] text-blue-600 hover:underline"
-      >
-        {url}
-      </a>
-    </div>
-  </Card>
-);
+const InspoLinkCard = ({ url }: { url: string }) => {
+  const formattedUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `https://${url}`;
+
+  return (
+    <Card className="flex items-center justify-between p-4">
+      <div className="flex items-center">
+        <Instagram className="mr-2 text-pink-500" size={20} />
+        <a
+          href={formattedUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm truncate max-w-[200px] text-blue-600 hover:underline"
+        >
+          {url}
+        </a>
+      </div>
+    </Card>
+  );
+};
+
 
 
 
