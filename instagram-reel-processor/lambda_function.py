@@ -172,42 +172,55 @@ def transcribe_audio_whisper(audio_path):
     return transcription[0]
 
 def process_video_to_text(video_folder, post):
-    video_path = None
-    for file in os.listdir(video_folder):
-        if file.endswith(".mp4"):
-            video_path = os.path.join(video_folder, file)
-            break
-    
-    if not video_path:
-        print("No MP4 file found in the specified folder.")
-        return
+    try:
+        # Find the MP4 file
+        video_path = next((os.path.join(video_folder, file) for file in os.listdir(video_folder) if file.endswith(".mp4")), None)
+        
+        if not video_path:
+            logger.error("No MP4 file found in the specified folder.")
+            raise FileNotFoundError("No MP4 file found")
 
-    video = mp.VideoFileClip(video_path)
-    audio_path = os.path.join(video_folder, "full_audio.wav")
-    video.audio.write_audiofile(audio_path)
+        logger.info(f"Processing video: {video_path}")
 
-    video_style = analyze_video_style(video_path)
-    audio_style = analyze_audio(audio_path)
-    tags = extract_tags(post)
-    video_effects = detect_video_effects(video_path)
+        # Process video
+        with mp.VideoFileClip(video_path) as video:
+            audio_path = os.path.join(video_folder, "full_audio.wav")
+            video.audio.write_audiofile(audio_path)
 
-    print("Transcribing audio with OpenAI Whisper...")
-    transcription = transcribe_audio_whisper(audio_path)
+        # Analyze video and audio
+        video_style = analyze_video_style(video_path)
+        audio_style = analyze_audio(audio_path)
+        tags = extract_tags(post)
+        video_effects = detect_video_effects(video_path)
 
-    results_path = os.path.join(video_folder, "video_analysis.txt")
-    with open(results_path, "w", encoding="utf-8") as f:
-        f.write("Video Analysis Results\n")
-        f.write("======================\n\n")
-        f.write(f"Video Style:\n{video_style}\n\n")
-        f.write(f"Audio Style:\n{audio_style}\n\n")
-        f.write(f"Tags:\n{tags}\n\n")
-        f.write(f"Video Effects:\n{video_effects}\n\n")
-        f.write("Transcription:\n")
-        f.write(transcription)
+        logger.info("Transcribing audio with OpenAI Whisper...")
+        transcription = transcribe_audio_whisper(audio_path)
+
+        # Write results
+        results_path = os.path.join(video_folder, "video_analysis.txt")
+        with open(results_path, "w", encoding="utf-8") as f:
+            f.write("Video Analysis Results\n")
+            f.write("======================\n\n")
+            f.write(f"Video Style:\n{video_style}\n\n")
+            f.write(f"Audio Style:\n{audio_style}\n\n")
+            f.write(f"Tags:\n{tags}\n\n")
+            f.write(f"Video Effects:\n{video_effects}\n\n")
+            f.write("Transcription:\n")
+            f.write(transcription)
 
         logger.info(f"Video analysis and transcription saved to {results_path}")
+
+        # Clean up temporary audio file
+        os.remove(audio_path)
+        logger.info("Temporary audio file removed")
+
+        return results_path
+
+    except FileNotFoundError as e:
+        logger.error(f"File not found: {str(e)}")
+        raise
     except Exception as e:
-    logger.error(f"Error in process_video_to_text: {str(e)}", exc_info=True)
+        logger.error(f"Error in process_video_to_text: {str(e)}", exc_info=True)
         raise
 
 def lambda_handler(event, context):
@@ -259,8 +272,3 @@ def lambda_handler(event, context):
                 'message': f'Error processing reel: {str(e)}'
             })
         }
-
-def process_video_to_text(video_folder, post):
-    try:
-        # ... existing code ...
-
