@@ -5,14 +5,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
-import { Upload, Brain, Edit3, Share2, BarChart } from "lucide-react"
+import { Upload, Brain, List, Share2, BarChart } from "lucide-react"
 
 const steps = [
-  { icon: Upload, title: "Upload Video", description: "Upload your video to our secure platform" },
-  { icon: Brain, title: "AI Analysis", description: "Our AI analyzes the content and generates intelligent chapters" },
-  { icon: Edit3, title: "Review & Fine-tune", description: "Review and fine-tune the generated chapters if needed" },
-  { icon: Share2, title: "Embed & Share", description: "Embed the enhanced video player on your website or share directly" },
-  { icon: BarChart, title: "Boost Engagement", description: "Enjoy increased viewer engagement and improved content navigation" },
+  { icon: Upload, title: "Upload Video", description: "Upload your video to our platform" },
+  { icon: List, title: "Content Inspiration", description: "Select up to 3 videos as inspiration" },
+  { icon: Brain, title: "AI Editing", description: "Our AI fuses your video with other video formats" },
+  { icon: BarChart, title: "Boost Engagement", description: "Enjoy your transformative brand and increased viewer engagement!" },
 ]
 
 export default function HowItWorks() {
@@ -26,13 +25,9 @@ export default function HowItWorks() {
       <div className="max-w-4xl mx-auto">
         <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
         <Card>
-          <CardHeader>
-            <CardTitle>Follow these simple steps</CardTitle>
-            <CardDescription>Learn how our platform enhances your video content</CardDescription>
-          </CardHeader>
           <CardContent>
             <Tabs value={activeStep.toString()} onValueChange={(value) => setActiveStep(parseInt(value))} className="w-full">
-              <TabsList className="grid w-full grid-cols-5 mb-8">
+              <TabsList className="grid w-full grid-cols-4 mb-8 mt-8">
                 {steps.map((step, index) => (
                   <TabsTrigger
                     key={index}

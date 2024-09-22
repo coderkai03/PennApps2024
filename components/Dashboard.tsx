@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
-import { Instagram, Plus } from 'lucide-react';
+import { Instagram, Plus, Home } from 'lucide-react';
 import { supabase } from "../lib/supabaseClient"
 
 const mockUserVideos = [
