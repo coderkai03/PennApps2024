@@ -33,12 +33,12 @@ export default function VideoScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4">
       <div className="max-w-4xl mx-auto">
         <header className="flex justify-between items-center mb-8">
           <button className="flex items-center" onClick={() => router.push('/')}>
-            <Clapperboard className="text-blue-600 mr-2" />
-            <h1 className="text-2xl font-bold text-blue-600">Editly</h1>
+            <Clapperboard className="text-blue-600 dark:text-blue-400 mr-2" />
+            <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">Editly</h1>
           </button>
           <h2 className="text-xl font-semibold">
             {!videoFile ? "Video Upload" : "Final Edit"}
@@ -67,7 +67,7 @@ export default function VideoScreen() {
         </header>
         <main>
           {!videoFile ? (
-            <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
               <VideoInputScreen onNext={handleVideoUpload} />
             </div>
           ) : (

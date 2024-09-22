@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Star, Play, Check, Sun, Moon, User, Clapperboard, Edit, Sparkles, Wand2 } from 'lucide-react';
+import { ChevronDown, Sun, Moon, User, Clapperboard, Edit, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import VideoInputScreen from "./VideoInputScreen";
@@ -9,13 +9,11 @@ import VideoPlayerScreen from "./VideoPlayerScreen";
 import HowItWorks from './HowItWorks';
 import * as THREE from 'three';
 import Lenis from '@studio-freight/lenis';
-import Loading from './Loading'
 import { useTheme } from 'next-themes';
-import { Chapter, FeatureProps, TestimonialProps } from '@/lib/types';
+import { Chapter, FeatureProps } from '@/lib/types';
 import { useAuth } from '@/lib/auth'; 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import VideoScreen from '../app/videoscreen/page';
 
 const Feature: React.FC<FeatureProps> = ({ title, description, icon }) => (
   <Card className="w-full md:w-1/3 m-2 dark:bg-gray-800">
@@ -26,16 +24,6 @@ const Feature: React.FC<FeatureProps> = ({ title, description, icon }) => (
       </CardTitle>
     </CardHeader>
     <CardContent>{description}</CardContent>
-  </Card>
-);
-
-const Testimonial: React.FC<TestimonialProps> = ({ quote, author, role }) => (
-  <Card className="w-full md:w-1/3 m-2 dark:bg-gray-800">
-    <CardContent className="pt-6">
-      <p className="text-lg italic mb-4">&quot;{quote}&quot;</p>
-      <p className="font-semibold">{author}</p>
-      <p className="text-sm text-gray-600 dark:text-gray-400">{role}</p>
-    </CardContent>
   </Card>
 );
 
@@ -148,15 +136,6 @@ export default function SaasVideoLandingPage() {
       }
     };
   }, [theme, mounted]);
-
-  const handleVideoUpload = (file: File, processedChapters: Chapter[]) => {
-    setVideoFile(file)
-    setChapters(processedChapters)
-  }
-
-  const resetUpload = () => {
-    setVideoFile(null);
-  };
 
   const scrollToVideoInput = () => {
     setShowVideoInput(true);
