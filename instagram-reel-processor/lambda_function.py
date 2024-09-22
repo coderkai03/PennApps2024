@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import random
 import tempfile
 from urllib.parse import urlparse, parse_qs
 import instaloader
@@ -16,6 +17,7 @@ from transformers import WhisperProcessor, WhisperForConditionalGeneration
 import torch
 import librosa
 import logging
+from requests.exceptions import RequestException
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -39,6 +41,19 @@ def download_reel(reel_url, output_filename="reel", max_retries=3):
     
     # Set a user agent
     L.context._session.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+    
+    # Get credentials from environment variables
+    username = os.environ.get('INSTAGRAM_USERNAME')
+    password = os.environ.get('INSTAGRAM_PASSWORD')
+    
+    if username and password:
+        try:
+            L.login(username, password)
+            logger.info("Successfully logged in to Instagram")
+        except instaloader.exceptions.InstaloaderException as e:
+            logger.error(f"Failed to log in to Instagram: {e}")
+    else:
+        logger.warning("Instagram credentials not provided. Proceeding without authentication.")
     
     for attempt in range(max_retries):
         try:
@@ -312,3 +327,11 @@ def lambda_handler(event, context):
                 'message': f'Error processing reel: {str(e)}'
             })
         }
+
+# Test harness for local testing
+if __name__ == "__main__":
+    test_event = {
+        "reel_url": "https://www.instagram.com/reel/DAE01HLy3WM//"
+    }
+    result = lambda_handler(test_event, None)
+    print(json.dumps(result, indent=2))
