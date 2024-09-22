@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { InstagramReel } from '@/lib/types';
 import { auth } from "../lib/firebase"
+import { supabase } from "../lib/supabaseClient";
 
 interface VideoInputFormProps {
   onSubmit: (file: File, reels: InstagramReel[]) => void;
@@ -47,6 +48,26 @@ export default function VideoInputForm({
     setReels(updatedReels);
   };
 
+  const handleSaveReels = async (userId: string, reels: any[]) => {
+    try {
+      const { data, error } = await supabase
+        .from('reels')
+        .insert(reels.map(reel => ({
+          user_id: userId,
+          reel_url: reel.url
+        })));
+
+      if (error) {
+        throw new Error(`Error inserting reels: ${error.message}`);
+      }
+
+      console.log('Reels saved successfully:', data);
+      return data;
+    } catch (error) {
+      throw new Error(`Error saving reels: ${error}`);
+    }
+  };
+
   const handleUpload = async () => {
     if (file) {
       onSubmit(file, reels);
@@ -61,28 +82,14 @@ export default function VideoInputForm({
       console.log(userId);
 
       try {
-        const response = await fetch('http://127.0.0.1:5000/save-reels', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            userId: userId, 
-            reels: reels,   
-          }),
-        });
-
-        if (!response.ok) {
-          console.error('Failed to save reels:', response.statusText);
-        } else {
-          const result = await response.json();
-          console.log('Reels saved successfully:', result);
-        }
+        await handleSaveReels(userId, reels);
+        console.log('Reels saved successfully!');
       } catch (error) {
-        console.error('Error uploading reels:', error);
+        console.error('Error saving reels:', error);
       }
     }
   };
+
 
   return (
     <div className="space-y-4">

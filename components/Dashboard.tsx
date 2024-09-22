@@ -87,9 +87,9 @@ export default function Dashboard() {
       try {
         setIsLoading(true);
         const { data, error } = await supabase
-          .from('reels') 
+          .from('reels')
           .select('id, reel_url')
-          .eq('user_id', user.uid) 
+          .eq('user_id', user.uid)
           .order('id', { ascending: false });
 
         if (error) {
@@ -158,7 +158,10 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto">
         <header className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold">AI Video Dashboard</h1>
-          <Button variant="outline" onClick={handleSignOut}>Sign Out</Button>
+          <div className="space-x-4">
+            <Button variant="outline" onClick={() => router.push('/')}>Back</Button>
+            <Button variant="outline" onClick={handleSignOut}>Sign Out</Button>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
