@@ -35,7 +35,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       try {
+        
+        
         const result = await s3.upload(uploadParams).promise()
+
+        const flaskApiResponse = await fetch('http://127.0.0.1:5000/process-video', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            videoUrl: result.Location, // Send the S3 URL to Flask
+          }),
+        })
+
+        const flaskData = await flaskApiResponse.json()
+
+        console.log(flaskData)
+
         res.status(200).json({ videoUrl: result.Location })
       } catch (error) {
         console.error('Error uploading to S3:', error)
