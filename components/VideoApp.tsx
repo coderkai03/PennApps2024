@@ -221,7 +221,7 @@ export default function SaasVideoLandingPage() {
             <h2 className="text-3xl font-bold text-center mb-12">Features</h2>
             <div className="flex flex-wrap justify-center mt-10">
           <Feature
-            title="Cross-Content Fusion"
+            title="Content Fusion"
             description="Seamlessly blend different types of content to create unique and engaging videos."
             icon={<Wand2 className="text-purple-500" />}
           />
@@ -230,18 +230,13 @@ export default function SaasVideoLandingPage() {
             description="Let our AI handle the editing process, saving you time and effort while ensuring professional results."
             icon={<Edit className="text-blue-500" />}
           />
-          <Feature
-            title="AI-Powered Chapters"
-            description="Our advanced AI analyzes your video content to create intelligent chapter breakdowns for enhanced navigation."
-            icon={<Sparkles className="text-yellow-500" />}
-          />
         </div>
           </section>
 
           {/* How It Works Section */}
           <HowItWorks />
 
-          {/* Testimonials Section */}
+          {/* Testimonials Section
           <section className="py-16 px-4 relative z-10">
             <h2 className="text-3xl font-bold text-center mb-12">What Our Users Say</h2>
             <div className="flex flex-wrap justify-center">
@@ -261,7 +256,7 @@ export default function SaasVideoLandingPage() {
                 role="E-learning Director at EduOnline"
               />
             </div>
-          </section>
+          </section> */}
 
           {/* Video Input Section */}
           {showVideoInput && (
