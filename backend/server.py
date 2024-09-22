@@ -8,25 +8,7 @@ SUPABASE_URL = os.getenv("NEXT_PUBLIC_SUPABASE_PROJECT_URL")
 SUPABASE_KEY = os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 supabase_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
 
-data = {
-    "user_id": "xp8rZ6NQWzfuQCYPyO17D7kvV9J2", 
-    "duration": 10.833,
-    "color_style": "dark",
-    "motion_style": "high motion",
-    "dominant_color": [74.55356595468574, 83.2352721661055, 93.60759241722785], 
-    "volume_style": "quiet",
-    "frequency_style": "bass-heavy",
-    "hashtags": ['computerscience', 'softwareengineer', 'flirt', 'pickuplines'],
-    "mentions": [],
-    "video_effects": ['slow motion', 'rapid transitions', 'text overlay', 'color filters'],
-    "transcription": "Three hottest things to say to a programmer. Zero build errors. No merge conflicts. What? All test cases passed. Oh!"
-}
-
-response = supabase_client.table("videos").insert(data).execute()
-
-print(response)
-
-def process_video_to_text(video_folder, post, user_id):
+def process_video_to_text(video_folder, post, user_id): # NEED TO PASS FIREBASE AUTH ID
     video_path = None
     for file in os.listdir(video_folder):
         if file.endswith(".mp4"):

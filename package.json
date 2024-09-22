@@ -17,6 +17,7 @@
     "@radix-ui/react-separator": "^1.1.0",
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-tabs": "^1.1.0",
+    "@radix-ui/react-toast": "^1.2.1",
     "@studio-freight/lenis": "^1.0.42",
     "@supabase/supabase-js": "^2.45.4",
     "@types/formidable": "^3.4.5",

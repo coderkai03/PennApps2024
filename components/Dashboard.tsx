@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import { Instagram, Plus } from 'lucide-react';
 import { supabase } from "../lib/supabaseClient"
+import { Home, LogOut } from "lucide-react"
 
 const mockUserVideos = [
   { id: 1, title: 'Summer Vibes', status: 'Completed', color: 'bg-blue-200' },
@@ -164,8 +165,14 @@ export default function Dashboard() {
         <header className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold">AI Video Dashboard</h1>
           <div className="space-x-4">
-            <Button variant="outline" onClick={() => router.push('/')}>Back</Button>
-            <Button variant="outline" onClick={handleSignOut}>Sign Out</Button>
+            <Button variant="outline" onClick={() => router.push('/')}>
+              <Home className="w-4 h-4 mr-2" />
+              Home
+            </Button>
+            <Button variant="outline" onClick={handleSignOut}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
           </div>
         </header>
 
