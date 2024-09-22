@@ -4,13 +4,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, Sun, Moon, User, Clapperboard, Edit, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import VideoInputScreen from "./VideoInputScreen";
-import VideoPlayerScreen from "./VideoPlayerScreen";
 import HowItWorks from './HowItWorks';
 import * as THREE from 'three';
 import Lenis from '@studio-freight/lenis';
 import { useTheme } from 'next-themes';
-import { Chapter, FeatureProps } from '@/lib/types';
+import { FeatureProps } from '@/lib/types';
 import { useAuth } from '@/lib/auth'; 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -28,11 +26,8 @@ const Feature: React.FC<FeatureProps> = ({ title, description, icon }) => (
 );
 
 export default function SaasVideoLandingPage() {
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [showVideoInput, setShowVideoInput] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading] = useState(true);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -40,10 +35,6 @@ export default function SaasVideoLandingPage() {
   const router = useRouter();
 
   useEffect(() => setMounted(true), []);
-
-  const handleLoadingComplete = () => {
-    setIsLoading(false);
-  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -138,7 +129,6 @@ export default function SaasVideoLandingPage() {
   }, [theme, mounted]);
 
   const scrollToVideoInput = () => {
-    setShowVideoInput(true);
     router.push('/videoscreen')
   };
 
