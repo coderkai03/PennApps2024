@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Chapter } from '@/lib/types'
+import { auth } from "../lib/firebase"
 
 interface InstagramReel {
   url: string;
@@ -57,9 +58,29 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
       const formData = new FormData()
       formData.append('video', file)
 
+      const user = auth.currentUser;
+      if (!user) {
+        console.error('No user logged in');
+        return;
+      }
+
+      const userId = user.uid;
+      console.log(userId)
+
       try {
         const xhr = new XMLHttpRequest()
         xhr.open('POST', '/api/upload', true)
+
+        const response = await fetch('http://127.0.0.1:5000/save-reels', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: userId,  
+            reels: reels,    
+          }),
+        });
 
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
@@ -126,9 +147,9 @@ export default function VideoInputScreen({ onNext }: { onNext: (file: File, chap
       }
 
       // This is only a simulation for processing 
-      for (let i = 0; i <= 100; i += 20) { 
+      for (let i = 0; i <= 100; i += 20) {
         setProcessingProgress(i)
-        await new Promise(resolve => setTimeout(resolve, 200)) 
+        await new Promise(resolve => setTimeout(resolve, 200))
       }
 
       const result = await processResponse.json()
